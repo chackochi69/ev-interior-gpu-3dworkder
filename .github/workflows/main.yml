@@ -1,3 +1,26 @@
-# From the api-server directory
-docker build -f src/pipeline/runpod/Dockerfile src/pipeline/ -t yourname/ev-pipeline:latest
-docker push yourname/ev-pipeline:latest
+name: Build and Push to Docker Hub
+
+on:
+  push:
+    branches: [ "main" ] # Or your specific branch name
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          context: ./src/pipeline/
+          file: ./src/pipeline/runpod/Dockerfile
+          push: true
+          tags: eddyson6/ev-3d-reconstruction:latest
