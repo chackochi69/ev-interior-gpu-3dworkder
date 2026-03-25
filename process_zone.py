@@ -169,18 +169,22 @@ def run_colmap_pipeline(work_dir: str, img_dir: str) -> str:
     best_model_dir = os.path.join(sparse_dir, str(best_model_idx))
     maps[best_model_idx].write(best_model_dir)
 
-    # Try dense reconstruction (needs GPU/CPU stereo — may fail in serverless)
-    ply_path = _try_dense_reconstruction(
-        work_dir=work_dir,
-        sparse_model_dir=best_model_dir,
-        img_dir=img_dir,
-        dense_dir=dense_dir,
-    )
-    if ply_path:
-        return ply_path
-
-    # Fallback: export sparse point cloud as PLY
-    log("Dense reconstruction unavailable, exporting sparse point cloud")
+   # Dense reconstruction is slow (5-30 min). Disabled by default.
+    # Set COLMAP_DENSE=1 as an env var on the RunPod endpoint to enable it.
+    enable_dense = os.environ.get("COLMAP_DENSE", "0") == "1"
+    if enable_dense:
+        ply_path = _try_dense_reconstruction(
+            work_dir=work_dir,
+            sparse_model_dir=best_model_dir,
+            img_dir=img_dir,
+            dense_dir=dense_dir,
+        )
+        if ply_path:
+            return ply_path
+        log("Dense reconstruction failed, falling back to sparse point cloud")
+    else:
+        log("Dense reconstruction disabled (set COLMAP_DENSE=1 to enable)")
+    # Export sparse point cloud as PLY
     sparse_ply = os.path.join(work_dir, "sparse_points.ply")
     _export_sparse_points(maps[best_model_idx], sparse_ply)
     return sparse_ply
