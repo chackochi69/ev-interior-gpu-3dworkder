@@ -156,6 +156,7 @@ def run_colmap_pipeline(work_dir: str, img_dir: str) -> str:
     # Lower both so small scans (≥3 images) can still produce a model.
     _mapping_opts.min_model_size = 3
     _mapping_opts.min_num_matches = 10
+  _mapping_opts.multiple_models = False
     # Relax mapper thresholds for small scenes (defaults designed for 100+ images).
     _mapping_opts.mapper.init_min_num_inliers = 20   # default 100
     _mapping_opts.mapper.abs_pose_min_num_inliers = 10  # default 30
