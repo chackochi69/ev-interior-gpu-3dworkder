@@ -23,7 +23,7 @@ RUN pip3 install --no-cache-dir \
         "runpod<2.0" \
         pycolmap \
         Pillow \
-        "numpy<2" \
+        numpy \
         scipy \
         trimesh \
         requests
