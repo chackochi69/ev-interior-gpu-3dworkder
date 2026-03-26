@@ -21,6 +21,7 @@ RUN pip3 install --no-cache-dir \
         pycolmap \
         Pillow \
         numpy \
+        scipy \
         trimesh \
         requests
 
