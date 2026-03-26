@@ -3,8 +3,6 @@ name: Build & Push RunPod Image
 on:
   push:
     branches: [main]
-    paths:
-      - "artifacts/api-server/src/pipeline/**"
   workflow_dispatch:
 
 env:
@@ -30,8 +28,8 @@ jobs:
       - name: Build and push
         uses: docker/build-push-action@v6
         with:
-          context: artifacts/api-server/src/pipeline
-          file: artifacts/api-server/src/pipeline/runpod/Dockerfile
+          context: .
+          file: Dockerfile
           push: true
           no-cache: true
           tags: |
