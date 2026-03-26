@@ -19,7 +19,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # pycolmap jumped from 0.6.x to 3.10.x (COLMAP versioning) with a completely
 # different API; pin to 0.6.1 which matches the code in process_zone.py.
 # runpod 1.x is the stable serverless SDK; 2.x changed the startup API.
-RUN pip3 install --no-cache-dir \
+RUN pip3 install --no-cache-dir --break-system-packages \
         "runpod<2.0" \
         pycolmap \
         Pillow \
