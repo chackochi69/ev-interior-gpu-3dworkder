@@ -145,11 +145,12 @@ def run_colmap_pipeline(work_dir: str, img_dir: str) -> str:
     log("Matching features (sequential)...")
     _pairing_options = pycolmap.SequentialPairingOptions()
     _pairing_options.overlap = 5
-    _pairing_options.loop_detection = True
-    _pairing_options.loop_detection_num_images = 10
+    _pairing_options.loop_detection = False
+    _match_device = pycolmap.Device.cuda if use_gpu else pycolmap.Device.cpu
     pycolmap.match_sequential(
         database_path=db_path,
         pairing_options=_pairing_options,
+        device=_match_device,
     )
 
     log("Running sparse reconstruction...")
