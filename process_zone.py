@@ -142,25 +142,34 @@ def run_colmap_pipeline(work_dir: str, img_dir: str) -> str:
         extraction_options=_extraction_options,
     )
 
-    log("Matching features (sequential)...")
-    _pairing_options = pycolmap.SequentialPairingOptions()
-    _pairing_options.overlap = 5
-    _pairing_options.loop_detection = False
-    pycolmap.match_sequential(
-    database_path=db_path,
-    pairing_options=_pairing_options,
-    device=pycolmap.Device.cpu,
-)
-
+    log("Matching features (exhaustive)...")
+    # Exhaustive matching is more reliable than sequential for small image sets.
+    # pycolmap's matching wheel has no CUDA support compiled in, so force CPU.
+    pycolmap.match_exhaustive(
+        database_path=db_path,
+        device=pycolmap.Device.cpu,
+    )
     log("Running sparse reconstruction...")
+    _mapping_opts = pycolmap.IncrementalPipelineOptions()
+    # Default min_model_size=10 rejects any reconstruction with fewer images.
+    # Default min_num_matches=15 is too strict for close-range scans.
+    # Lower both so small scans (≥3 images) can still produce a model.
+    _mapping_opts.min_model_size = 3
+    _mapping_opts.min_num_matches = 10
+    # Relax mapper thresholds for small scenes (defaults designed for 100+ images).
+    _mapping_opts.mapper.init_min_num_inliers = 20   # default 100
+    _mapping_opts.mapper.abs_pose_min_num_inliers = 10  # default 30
     maps = pycolmap.incremental_mapping(
         database_path=db_path,
         image_path=img_dir,
         output_path=sparse_dir,
+        options=_mapping_opts,
     )
-
     if not maps:
-        raise RuntimeError("COLMAP sparse reconstruction produced no models")
+        raise RuntimeError(
+            "COLMAP sparse reconstruction produced no models. "
+            "Ensure images have significant overlap (>50%) and cover the same scene."
+        )
 
     log(f"Sparse reconstruction done ({len(maps)} model(s))")
 
