@@ -276,41 +276,40 @@ def ply_to_glb(ply_path: str, output_glb: str) -> None:
     log(f"Loading PLY: {ply_path}")
     scene_or_mesh = trimesh.load(ply_path)
 
-    # If we got a PointCloud, build a minimal mesh for GLB export
     if isinstance(scene_or_mesh, trimesh.PointCloud):
-        log("Loaded point cloud — converting to mesh via convex hull")
-        if len(scene_or_mesh.vertices) < 4:
-            raise RuntimeError("Too few points to reconstruct a mesh (< 4 vertices)")
-        mesh = scene_or_mesh.convex_hull
-        mesh.visual.vertex_colors = np.full(
-            (len(mesh.vertices), 4), [128, 128, 128, 255], dtype=np.uint8
-        )
+        pc = scene_or_mesh
+        log(f"Point cloud: {len(pc.vertices)} points")
+        if len(pc.vertices) < 1:
+            raise RuntimeError("Empty point cloud — reconstruction produced no 3D points")
+        # Export as GLTF POINTS primitive — Three.js renders this as colored dots
+        pc.export(output_glb, file_type="glb")
     elif isinstance(scene_or_mesh, trimesh.Scene):
         log("Loaded scene — merging geometries")
         mesh = trimesh.util.concatenate(list(scene_or_mesh.geometry.values()))
+        _export_mesh(mesh, output_glb)
     else:
-        mesh = scene_or_mesh
+        _export_mesh(scene_or_mesh, output_glb)
 
-    # Basic cleanup
+    size_mb = os.path.getsize(output_glb) / (1024 * 1024)
+    log(f"GLB exported ({size_mb:.1f} MB)")
+
+
+def _export_mesh(mesh, output_glb: str) -> None:
+    """Clean up and export a trimesh Mesh to GLB."""
+    import trimesh
     log(f"Mesh: {len(mesh.vertices)} vertices, {len(mesh.faces)} faces")
-    if not mesh.is_watertight:
+    if hasattr(mesh, 'is_watertight') and not mesh.is_watertight:
         trimesh.repair.fill_holes(mesh)
-
-    # Decimate to <500k triangles for web streaming
     MAX_FACES = 500_000
     if len(mesh.faces) > MAX_FACES:
-        log(f"Decimating from {len(mesh.faces)} to {MAX_FACES} faces")
         target = MAX_FACES / len(mesh.faces)
         try:
             mesh = mesh.simplify_quadric_decimation(percent=target)
             log(f"After decimation: {len(mesh.faces)} faces")
         except Exception as e:
             log(f"Decimation warning: {e} — continuing with full mesh")
-
-    log(f"Exporting GLB to: {output_glb}")
+    log(f"Exporting mesh GLB to: {output_glb}")
     mesh.export(output_glb, file_type="glb")
-    size_mb = os.path.getsize(output_glb) / (1024 * 1024)
-    log(f"GLB exported ({size_mb:.1f} MB)")
 
 
 def main() -> None:
