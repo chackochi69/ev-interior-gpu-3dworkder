@@ -21,7 +21,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # runpod 1.x is the stable serverless SDK; 2.x changed the startup API.
 RUN pip3 install --no-cache-dir \
         "runpod==1.7.9" \
-        "pycolmap==0.6.1" \
+        "pycolmap==0.6.0" \
         "Pillow>=10,<11" \
         "numpy<2" \
         "scipy>=1.11" \
