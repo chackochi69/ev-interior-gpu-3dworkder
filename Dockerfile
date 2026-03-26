@@ -20,13 +20,13 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # different API; pin to 0.6.1 which matches the code in process_zone.py.
 # runpod 1.x is the stable serverless SDK; 2.x changed the startup API.
 RUN pip3 install --no-cache-dir \
-        "runpod==1.7.9" \
-        "pycolmap==0.6.0" \
-        "Pillow>=10,<11" \
+        "runpod<2.0" \
+        pycolmap \
+        Pillow \
         "numpy<2" \
-        "scipy>=1.11" \
-        "trimesh>=4" \
-        "requests>=2.31"
+        scipy \
+        trimesh \
+        requests
 
 WORKDIR /app
 
